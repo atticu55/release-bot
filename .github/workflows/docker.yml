@@ -15,7 +15,7 @@ env:
   REGISTRY_USER: ${{ github.repository_owner }}
   REGISTRY_PASS: ${{ secrets.GITHUB_TOKEN }}
   IMAGE_NAME: ${{ github.repository }}
-  TEST_TAG: ghcr.io/janisv/release-bot:test
+  TEST_TAG: ghcr.io/${{ github.repository }}:test
 
 jobs:
   build-docker:
