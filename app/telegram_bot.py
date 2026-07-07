@@ -258,6 +258,11 @@ class TelegramBot(object):
                         chat.repos.remove(repo_obj)
                         db.session.commit()
 
+                        db.session.expire(repo_obj, ['chats'])
+                        if repo_obj.is_orphan():
+                            db.session.delete(repo_obj)
+                            db.session.commit()
+
                         reply_message = f"Deleted repo: <b>{repo_obj.full_name}</b>"
                         repo_url = repo_obj.link
                         await update.message.get_bot().send_message(chat_id, reply_message,
@@ -539,6 +544,11 @@ class TelegramBot(object):
                     if repo_obj:
                         chat.repos.remove(repo_obj)
                         db.session.commit()
+
+                        db.session.expire(repo_obj, ['chats'])
+                        if repo_obj.is_orphan():
+                            db.session.delete(repo_obj)
+                            db.session.commit()
 
                         reply_message = f"Deleted repo: <b>{repo_obj.full_name}</b>"
                         repo_url = repo_obj.link

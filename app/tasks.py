@@ -21,6 +21,10 @@ def poll_github():
             return
 
         for repo_obj in models.Repo.query.all():
+            # Skip orphan repos until clear_db cleans them up
+            if repo_obj.is_orphan():
+                continue
+
             # TODO: Filter blocked repos from SQL query
             if repo_obj.blocked:
                 continue
@@ -30,6 +34,8 @@ def poll_github():
                 repo = github_obj.get_repo(repo_obj.id)
             except github.UnknownObjectException as e:
                 message = f"GitHub repo {repo_obj.full_name} has been deleted"
+
+                db.session.expire(repo_obj, ['chats'])
                 for chat in repo_obj.chats:
                     try:
                         asyncio.run(telegram_bot.send_message(chat_id=chat.id,
@@ -45,6 +51,8 @@ def poll_github():
             except github.GithubException as e:
                 if e.status in (403, 451):
                     message = f"GitHub repo {repo_obj.full_name} has been blocked"
+
+                    db.session.expire(repo_obj, ['chats'])
                     for chat in repo_obj.chats:
                         try:
                             asyncio.run(telegram_bot.send_message(chat_id=chat.id,
@@ -62,6 +70,8 @@ def poll_github():
 
             if repo.archived and not repo_obj.archived:
                 message = f"GitHub repo <b>{repo_obj.full_name}</b> has been archived"
+
+                db.session.expire(repo_obj, ['chats'])
                 for chat in repo_obj.chats:
                     try:
                         asyncio.run(telegram_bot.send_message(chat_id=chat.id,
@@ -82,6 +92,8 @@ def poll_github():
                 db.session.commit()
 
             release_or_tag, prerelease = store_latest_release(db.session, repo, repo_obj)
+
+            db.session.expire(repo_obj, ['chats'])
             if isinstance(release_or_tag, GitRelease):
                 release = release_or_tag
                 scheduler.app.logger.info(f"Process new release {release.title}")
@@ -132,7 +144,7 @@ def poll_github():
                         .filter(ChatRepo.chat_id == chat.id).filter(ChatRepo.repo_id == repo_obj.id) \
                         .first()
                     if not chat_repo.process_pre_releases:
-                        break
+                        continue
 
                     message, parse_mode, entities = format_release_message(chat.release_note_format, repo, release)
 
