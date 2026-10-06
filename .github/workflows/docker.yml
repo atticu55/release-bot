@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
   release:
     types: [published]
 
@@ -91,8 +92,9 @@ jobs:
           # Wait for server to start
           sleep 30
           # Check if status code is correct
+          # /stats works without a Telegram token; / needs a live bot object
           expected_status="HTTP/1.1 200 OK"
-          actual_status=$(curl -I -X GET http://localhost:5000 | head -n 1)
+          actual_status=$(curl -I -X GET http://localhost:5000/stats | head -n 1)
           if [[ ! "$actual_status" =~ "$expected_status" ]]; then
             echo 'Failed while checking the status code after request to /'
             echo 'expected: ' $expected_status
