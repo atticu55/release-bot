@@ -114,3 +114,5 @@ python3 -m flask run -h 0.0.0.0
 ```
 
 For use webhooks locally, you may want to use [localhost.run](https://localhost.run/).
+
+> **Fork notes:** CI builds this fork's image to `ghcr.io/atticu55/release-bot:main` on every push to main. The health-check uses `/stats` (works without a Telegram token).
