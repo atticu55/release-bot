@@ -1,0 +1,12 @@
+name: Trigger Debug
+on:
+  push:
+    branches: [ main ]
+  repository_dispatch:
+    types: [ ci-build ]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "trigger works: ${{ github.event_name }}"
